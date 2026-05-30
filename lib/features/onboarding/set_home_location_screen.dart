@@ -17,6 +17,7 @@ class SetHomeLocationScreen extends StatefulWidget {
 class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
   HomeLocation? _selectedLocation;
   bool _loading = false;
+  bool _locationDenied = false;
 
   Future<void> _useCurrentLocation() async {
     setState(() => _loading = true);
@@ -34,12 +35,15 @@ class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
         _loading = false;
       });
     } else {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _locationDenied = true;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Could not get location. Check that location services are enabled and permission is granted.',
+              'Location unavailable. Use "Pick on Map" instead.',
             ),
             duration: Duration(seconds: 4),
           ),
@@ -83,7 +87,7 @@ class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
-              onPressed: _loading ? null : _useCurrentLocation,
+              onPressed: (_loading || _locationDenied) ? null : _useCurrentLocation,
               icon: _loading
                   ? const SizedBox(
                       width: 16,
@@ -91,7 +95,9 @@ class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.my_location),
-              label: const Text('Use Current Location'),
+              label: Text(_locationDenied
+                  ? 'Location Unavailable'
+                  : 'Use Current Location'),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(

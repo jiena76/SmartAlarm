@@ -42,7 +42,7 @@ class SmartAlarmApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.deepOrange,
-            brightness: Brightness.dark,
+            brightness: Brightness.light,
           ),
           useMaterial3: true,
         ),

@@ -19,6 +19,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   LatLng _selectedLocation = const LatLng(37.7749, -122.4194);
   double _radius = 40.0;
   bool _locating = false;
+  bool _locationDenied = false;
   String? _searchError;
 
   @override
@@ -32,7 +33,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _locating = false);
+        setState(() {
+          _locating = false;
+          _locationDenied = true;
+        });
         return;
       }
 
@@ -42,7 +46,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        setState(() => _locating = false);
+        setState(() {
+          _locating = false;
+          _locationDenied = true;
+        });
         return;
       }
 
@@ -193,14 +200,18 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             bottom: 120,
             right: 16,
             child: FloatingActionButton.small(
-              onPressed: _locating ? null : _goToCurrentLocation,
+              onPressed: (_locating || _locationDenied) ? null : _goToCurrentLocation,
+              backgroundColor: _locationDenied ? Colors.grey[700] : null,
               child: _locating
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.my_location),
+                  : Icon(
+                      Icons.my_location,
+                      color: _locationDenied ? Colors.grey[500] : null,
+                    ),
             ),
           ),
           // Bottom card with radius
