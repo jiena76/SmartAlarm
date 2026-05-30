@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -81,11 +82,31 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
   }
 
   void _snooze() {
+    final alarmId = widget.alarm.id.hashCode.abs() % 2147483647;
+    Alarm.stop(alarmId);
+
     setState(() {
       _isSnoozed = true;
     });
 
     _snoozeTimer = Timer(Duration(minutes: _currentSnoozeDuration), () {
+      // Re-ring after snooze
+      Alarm.set(
+        alarmSettings: AlarmSettings(
+          id: alarmId,
+          dateTime: DateTime.now().add(const Duration(seconds: 1)),
+          assetAudioPath: 'assets/alarm_sound.mp3',
+          vibrate: true,
+          volumeSettings: const VolumeSettings.fixed(volume: 0.8),
+          loopAudio: true,
+          notificationSettings: NotificationSettings(
+            title: widget.alarm.type == AlarmType.locationGated
+                ? 'Time to leave!'
+                : 'Wake up!',
+            body: widget.alarm.eventTitle ?? 'SmartAlarm',
+          ),
+        ),
+      );
       setState(() => _isSnoozed = false);
     });
 
@@ -98,6 +119,7 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
     _locationService.stopMonitoring();
     _locationTimeoutTimer?.cancel();
     _snoozeTimer?.cancel();
+    Alarm.stop(widget.alarm.id.hashCode.abs() % 2147483647);
     Navigator.of(context).pop(true);
   }
 
