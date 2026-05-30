@@ -44,5 +44,15 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Local properties (contains SDK paths)
+**/local.properties
+
+# Ephemeral build files
+**/ephemeral/
+
+# Platforms we don't target
+linux/
+windows/
+
 # Claude Code
 .claude/

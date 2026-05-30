@@ -1,0 +1,51 @@
+PODS:
+  - alarm (0.0.1):
+    - Flutter
+  - device_calendar (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_fgbg (0.0.1):
+    - Flutter
+  - purchases_flutter (8.11.0):
+    - Flutter
+    - PurchasesHybridCommon (= 14.3.0)
+  - PurchasesHybridCommon (14.3.0):
+    - RevenueCat (= 5.32.0)
+  - RevenueCat (5.32.0)
+
+DEPENDENCIES:
+  - alarm (from `.symlinks/plugins/alarm/ios`)
+  - device_calendar (from `.symlinks/plugins/device_calendar/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_fgbg (from `.symlinks/plugins/flutter_fgbg/ios`)
+  - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - RevenueCat
+
+EXTERNAL SOURCES:
+  alarm:
+    :path: ".symlinks/plugins/alarm/ios"
+  device_calendar:
+    :path: ".symlinks/plugins/device_calendar/ios"
+  Flutter:
+    :path: Flutter
+  flutter_fgbg:
+    :path: ".symlinks/plugins/flutter_fgbg/ios"
+  purchases_flutter:
+    :path: ".symlinks/plugins/purchases_flutter/ios"
+
+SPEC CHECKSUMS:
+  alarm: 8a8ed4893eb9bd09e7c5a96bf8ab8104f380f65f
+  device_calendar: b55b2c5406cfba45c95a59f9059156daee1f74ed
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_fgbg: d3da78df78454b1808f0829a5da9cd17dfe16444
+  purchases_flutter: 3570127ba41583a75e553d68a763367007830eff
+  PurchasesHybridCommon: 7f0944cc5411bdcd1ea5d69affa6a6f9aaf87b13
+  RevenueCat: 7e1d0768fb287c9983173c9b28e39ccbeeb828a9
+
+PODFILE CHECKSUM: ce2a4dd764e1c7aeed6a7cdc5e61d092b6dc6d32
+
+COCOAPODS: 1.16.2
