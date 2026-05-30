@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/alarm_model.dart';
 import '../../services/alarm_service.dart';
+import '../../services/alarm_trigger_service.dart';
 import '../calendar/calendar_sync_screen.dart';
 import '../settings/settings_screen.dart';
 import 'alarm_firing_screen.dart';
@@ -14,6 +15,7 @@ class AlarmHomeScreen extends StatefulWidget {
 
 class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
   final AlarmService _alarmService = AlarmService();
+  final AlarmTriggerService _triggerService = AlarmTriggerService();
   List<AlarmModel> _alarms = [];
 
   @override
@@ -271,6 +273,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
     );
 
     await _alarmService.scheduleAlarm(alarm);
+    await _triggerService.setAlarm(alarm);
     _loadAlarms();
   }
 }
