@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../models/home_location.dart';
 
 class MapPickerScreen extends StatefulWidget {
@@ -13,30 +15,73 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
   final MapController _mapController = MapController();
-  LatLng _selectedLocation = const LatLng(37.7749, -122.4194); // Default SF
+  final TextEditingController _searchController = TextEditingController();
+  LatLng _selectedLocation = const LatLng(37.7749, -122.4194);
   double _radius = 40.0;
-  bool _initialLocationSet = false;
+  bool _locating = false;
+  String? _searchError;
 
   @override
   void initState() {
     super.initState();
-    _tryGetCurrentLocation();
+    _goToCurrentLocation();
   }
 
-  Future<void> _tryGetCurrentLocation() async {
+  Future<void> _goToCurrentLocation() async {
+    setState(() => _locating = true);
     try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() => _locating = false);
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        setState(() => _locating = false);
+        return;
+      }
+
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
-      ).timeout(const Duration(seconds: 5));
-      if (mounted && !_initialLocationSet) {
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      ).timeout(const Duration(seconds: 10));
+
+      if (mounted) {
         setState(() {
           _selectedLocation = LatLng(position.latitude, position.longitude);
-          _initialLocationSet = true;
+          _locating = false;
         });
         _mapController.move(_selectedLocation, 17.0);
       }
     } catch (_) {
-      // Use default location
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _searchAddress(String query) async {
+    if (query.trim().isEmpty) return;
+
+    setState(() => _searchError = null);
+
+    try {
+      final locations = await locationFromAddress(query)
+          .timeout(const Duration(seconds: 10));
+      if (locations.isNotEmpty && mounted) {
+        final loc = locations.first;
+        setState(() {
+          _selectedLocation = LatLng(loc.latitude, loc.longitude);
+        });
+        _mapController.move(_selectedLocation, 17.0);
+        FocusScope.of(context).unfocus();
+      }
+    } on TimeoutException {
+      setState(() => _searchError = 'Search timed out. Try again.');
+    } catch (_) {
+      setState(() => _searchError = 'Address not found. Try a different search.');
     }
   }
 
@@ -96,6 +141,69 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               ),
             ],
           ),
+          // Search bar at top
+          Positioned(
+            top: 8,
+            left: 8,
+            right: 8,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: const InputDecoration(
+                              hintText: 'Search address...',
+                              border: InputBorder.none,
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                            onSubmitted: _searchAddress,
+                            textInputAction: TextInputAction.search,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: () => _searchAddress(_searchController.text),
+                        ),
+                      ],
+                    ),
+                    if (_searchError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          _searchError!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // My location FAB
+          Positioned(
+            bottom: 120,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: _locating ? null : _goToCurrentLocation,
+              child: _locating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location),
+            ),
+          ),
+          // Bottom card with radius
           Positioned(
             bottom: 16,
             left: 16,
@@ -107,7 +215,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Tap the map to set your home location',
+                      'Tap the map or search to set location',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
@@ -147,5 +255,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       label: 'Home',
     );
     Navigator.pop(context, home);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
