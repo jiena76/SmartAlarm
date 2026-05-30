@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
+import '../../core/theme_provider.dart';
 import '../../models/alarm_model.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -214,7 +216,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // TODO: Navigate to set home location
             },
           ),
+          const Divider(),
+          _buildSectionHeader('Appearance'),
+          _buildThemeTile(context),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeTile(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final currentMode = themeProvider.themeMode;
+    final labels = {
+      ThemeMode.light: 'Light',
+      ThemeMode.dark: 'Dark',
+      ThemeMode.system: 'System',
+    };
+
+    return ListTile(
+      title: const Text('Theme'),
+      subtitle: Text(labels[currentMode]!),
+      trailing: SegmentedButton<ThemeMode>(
+        segments: const [
+          ButtonSegment(value: ThemeMode.light, label: Text('Light')),
+          ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
+          ButtonSegment(value: ThemeMode.system, label: Text('Auto')),
+        ],
+        selected: {currentMode},
+        onSelectionChanged: (set) {
+          themeProvider.setThemeMode(set.first);
+        },
       ),
     );
   }

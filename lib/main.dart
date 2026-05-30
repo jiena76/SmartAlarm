@@ -13,6 +13,7 @@ import 'services/alarm_scheduler.dart';
 import 'services/alarm_service.dart';
 import 'services/alarm_trigger_service.dart';
 import 'services/evening_check_service.dart';
+import 'core/theme_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -35,18 +36,31 @@ class SmartAlarmApp extends StatelessWidget {
         Provider(create: (_) => CalendarService()),
         Provider(create: (_) => AlarmScheduler()),
         Provider(create: (_) => AlarmTriggerService()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        title: 'SmartAlarm',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepOrange,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-        ),
-        home: const AppEntry(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            navigatorKey: navigatorKey,
+            title: 'SmartAlarm',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepOrange,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepOrange,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+            ),
+            themeMode: themeProvider.themeMode,
+            home: const AppEntry(),
+          );
+        },
       ),
     );
   }
