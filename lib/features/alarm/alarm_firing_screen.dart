@@ -309,6 +309,20 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
             ),
           ),
         ),
+        if (widget.alarm.id.startsWith('test_')) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: TextButton(
+              onPressed: _dismiss,
+              child: const Text(
+                'Force Dismiss (Test Only)',
+                style: TextStyle(color: Colors.white38),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
