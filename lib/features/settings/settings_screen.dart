@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../core/constants.dart';
 import '../../core/theme_provider.dart';
 import '../../models/alarm_model.dart';
+import '../../models/home_location.dart';
+import '../onboarding/map_picker_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -212,8 +215,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Update home location'),
             subtitle: const Text('Change where "home" is'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: Navigate to set home location
+            onTap: () async {
+              final result = await Navigator.push<HomeLocation>(
+                context,
+                MaterialPageRoute(builder: (_) => const MapPickerScreen()),
+              );
+              if (result != null && mounted) {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString(
+                  'home_location',
+                  jsonEncode(result.toJson()),
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Home location updated')),
+                  );
+                }
+              }
             },
           ),
           const Divider(),
