@@ -12,6 +12,7 @@ import 'services/calendar_service.dart';
 import 'services/alarm_scheduler.dart';
 import 'services/alarm_service.dart';
 import 'services/alarm_trigger_service.dart';
+import 'services/evening_check_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -19,6 +20,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AlarmService().initialize();
   await AlarmTriggerService().initialize();
+  EveningCheckService().scheduleEveningCheck();
   runApp(const SmartAlarmApp());
 }
 

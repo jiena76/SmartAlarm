@@ -3,6 +3,7 @@ import '../../services/calendar_service.dart';
 import '../../services/alarm_scheduler.dart';
 import '../../services/alarm_service.dart';
 import '../../services/alarm_trigger_service.dart';
+import '../../services/location_dictionary_service.dart';
 import '../../models/alarm_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +19,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   final AlarmScheduler _alarmScheduler = AlarmScheduler();
   final AlarmService _alarmService = AlarmService();
   final AlarmTriggerService _triggerService = AlarmTriggerService();
+  final LocationDictionaryService _dictionary = LocationDictionaryService();
   List<CalendarEvent>? _events;
   AlarmModel? _suggestedAlarm;
   bool _loading = true;
@@ -151,9 +153,15 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                         '${_formatTime(event.start)}'
                         '${event.location != null ? ' • ${event.location}' : ''}',
                       ),
-                      trailing: event.requiresTravel
-                          ? const Chip(label: Text('Travel'))
-                          : null,
+                      trailing: event.locationUnknown
+                          ? IconButton(
+                              icon: const Icon(Icons.help_outline, size: 20),
+                              tooltip: 'Classify this location',
+                              onPressed: () => _classifyLocation(event),
+                            )
+                          : event.requiresTravel
+                              ? const Chip(label: Text('Travel'))
+                              : null,
                     ),
                   );
                 },
@@ -217,6 +225,33 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _classifyLocation(CalendarEvent event) async {
+    if (event.location == null) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('"${event.location}"'),
+        content: const Text('Does this location require you to travel?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No (remote/home)'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes (travel)'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      await _dictionary.save(event.location!, result);
+      _loadCalendarEvents();
+    }
   }
 
   String _formatTime(DateTime time) {

@@ -18,6 +18,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   SnoozeMode _snoozeMode = SnoozeMode.fixed;
   VolumeMode _volumeMode = VolumeMode.fixed;
   bool _autoMode = true;
+  bool _fallbackAlarmEnabled = false;
+  TimeOfDay _fallbackAlarmTime = const TimeOfDay(hour: 7, minute: 0);
   bool _loading = true;
 
   @override
@@ -36,6 +38,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _snoozeMode = SnoozeMode.values[prefs.getInt('snooze_mode') ?? 0];
       _volumeMode = VolumeMode.values[prefs.getInt('volume_mode') ?? 0];
       _autoMode = prefs.getBool('auto_mode') ?? true;
+      _fallbackAlarmEnabled = prefs.getBool('fallback_alarm_enabled') ?? false;
+      final fallbackHour = prefs.getInt('fallback_alarm_hour') ?? 7;
+      final fallbackMinute = prefs.getInt('fallback_alarm_minute') ?? 0;
+      _fallbackAlarmTime = TimeOfDay(hour: fallbackHour, minute: fallbackMinute);
       _loading = false;
     });
   }
@@ -71,6 +77,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _saveSetting('auto_mode', value);
             },
           ),
+          const Divider(),
+          _buildSectionHeader('Fallback Alarm'),
+          SwitchListTile(
+            title: const Text('Default alarm on quiet days'),
+            subtitle: Text(_fallbackAlarmEnabled
+                ? 'Rings at ${_fallbackAlarmTime.format(context)} when no travel events'
+                : 'No alarm on days without travel events'),
+            value: _fallbackAlarmEnabled,
+            onChanged: (value) {
+              setState(() => _fallbackAlarmEnabled = value);
+              _saveSetting('fallback_alarm_enabled', value);
+            },
+          ),
+          if (_fallbackAlarmEnabled)
+            ListTile(
+              title: const Text('Fallback alarm time'),
+              subtitle: Text(_fallbackAlarmTime.format(context)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: _fallbackAlarmTime,
+                );
+                if (time != null) {
+                  setState(() => _fallbackAlarmTime = time);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setInt('fallback_alarm_hour', time.hour);
+                  await prefs.setInt('fallback_alarm_minute', time.minute);
+                }
+              },
+            ),
           const Divider(),
           _buildSectionHeader('Timing'),
           ListTile(
