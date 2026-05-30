@@ -37,6 +37,10 @@ dependencies:
   # Subscriptions
   purchases_flutter: ^8.3.0
 
+  # Map picker
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
   # Permissions
   permission_handler: ^11.3.1
 

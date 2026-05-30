@@ -13,12 +13,15 @@ class LocationService {
   });
 
   Future<bool> checkPermission() async {
-    final permission = await Geolocator.checkPermission();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return false;
+
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      final requested = await Geolocator.requestPermission();
-      return requested == LocationPermission.always ||
-          requested == LocationPermission.whileInUse;
+      permission = await Geolocator.requestPermission();
     }
+    if (permission == LocationPermission.deniedForever) return false;
+
     return permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
   }
@@ -27,11 +30,18 @@ class LocationService {
     final hasPermission = await checkPermission();
     if (!hasPermission) return null;
 
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
-    );
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).timeout(const Duration(seconds: 10));
+    } on TimeoutException {
+      // Fall back to last known position
+      return await Geolocator.getLastKnownPosition();
+    } catch (_) {
+      return null;
+    }
   }
 
   void startMonitoring({

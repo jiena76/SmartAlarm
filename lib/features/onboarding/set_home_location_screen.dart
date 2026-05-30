@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../../services/location_service.dart';
 import '../../models/home_location.dart';
 import '../alarm/alarm_home_screen.dart';
+import 'map_picker_screen.dart';
 
 class SetHomeLocationScreen extends StatefulWidget {
   const SetHomeLocationScreen({super.key});
@@ -36,7 +37,12 @@ class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not get location. Please grant permission.')),
+          const SnackBar(
+            content: Text(
+              'Could not get location. Check that location services are enabled and permission is granted.',
+            ),
+            duration: Duration(seconds: 4),
+          ),
         );
       }
     }
@@ -89,11 +95,14 @@ class _SetHomeLocationScreenState extends State<SetHomeLocationScreen> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Open map picker for manual pin
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Map picker coming soon')),
+              onPressed: () async {
+                final result = await Navigator.push<HomeLocation>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MapPickerScreen()),
                 );
+                if (result != null) {
+                  setState(() => _selectedLocation = result);
+                }
               },
               icon: const Icon(Icons.map),
               label: const Text('Pick on Map'),
