@@ -49,6 +49,14 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>SmartAlarm needs calendar access to read your events and set alarms automatically.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>SmartAlarm needs calendar access to read your events and set alarms automatically.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SmartAlarm uses your location to detect when you leave home so the alarm can be dismissed.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SmartAlarm needs background location to track when you leave home while the alarm is active.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

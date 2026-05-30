@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/calendar_service.dart';
 import '../../services/alarm_scheduler.dart';
 import '../../services/alarm_service.dart';
+import '../../services/alarm_trigger_service.dart';
 import '../../models/alarm_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +17,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   final CalendarService _calendarService = CalendarService();
   final AlarmScheduler _alarmScheduler = AlarmScheduler();
   final AlarmService _alarmService = AlarmService();
+  final AlarmTriggerService _triggerService = AlarmTriggerService();
   List<CalendarEvent>? _events;
   AlarmModel? _suggestedAlarm;
   bool _loading = true;
@@ -60,6 +62,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
     if (_suggestedAlarm == null) return;
 
     await _alarmService.scheduleAlarm(_suggestedAlarm!);
+    await _triggerService.setAlarm(_suggestedAlarm!);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
