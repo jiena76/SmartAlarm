@@ -40,8 +40,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _getReadyMinutes = prefs.getInt('get_ready_minutes') ?? AppConstants.defaultGetReadyMinutes;
       _snoozeDuration = prefs.getInt('snooze_duration') ?? AppConstants.defaultSnoozeDurationMinutes;
       _locationTimeoutMinutes = prefs.getInt('location_timeout_minutes') ?? AppConstants.defaultLocationTimeoutMinutes;
-      _snoozeMode = SnoozeMode.values[prefs.getInt('snooze_mode') ?? 0];
-      _volumeMode = VolumeMode.values[prefs.getInt('volume_mode') ?? 0];
+      final snoozeIndex = prefs.getInt('snooze_mode') ?? 0;
+      _snoozeMode = snoozeIndex < SnoozeMode.values.length
+          ? SnoozeMode.values[snoozeIndex]
+          : SnoozeMode.fixed;
+      final volumeIndex = prefs.getInt('volume_mode') ?? 0;
+      _volumeMode = volumeIndex < VolumeMode.values.length
+          ? VolumeMode.values[volumeIndex]
+          : VolumeMode.fixed;
       _autoMode = prefs.getBool('auto_mode') ?? true;
       _fallbackAlarmEnabled = prefs.getBool('fallback_alarm_enabled') ?? false;
       final fallbackHour = prefs.getInt('fallback_alarm_hour') ?? 7;

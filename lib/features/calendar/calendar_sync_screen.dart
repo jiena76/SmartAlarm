@@ -32,14 +32,16 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   }
 
   Future<void> _loadCalendarEvents() async {
-    setState(() => _loading = true);
+    if (mounted) setState(() => _loading = true);
 
     final hasPermission = await _calendarService.requestPermission();
     if (!hasPermission) {
-      setState(() {
-        _error = 'Calendar permission denied. Please grant access in Settings.';
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Calendar permission denied. Please grant access in Settings.';
+          _loading = false;
+        });
+      }
       return;
     }
 
@@ -53,6 +55,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       getReadyMinutes: getReadyMinutes,
     );
 
+    if (!mounted) return;
     setState(() {
       _events = events;
       _suggestedAlarm = alarm;
@@ -248,7 +251,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       ),
     );
 
-    if (result != null) {
+    if (result != null && mounted) {
       await _dictionary.save(event.location!, result);
       _loadCalendarEvents();
     }

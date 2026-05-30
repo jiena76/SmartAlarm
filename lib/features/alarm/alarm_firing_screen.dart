@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../models/alarm_model.dart';
 import '../../models/home_location.dart';
 import '../../services/location_service.dart';
+import '../../services/alarm_trigger_service.dart';
 import '../../core/constants.dart';
 
 class AlarmFiringScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
   Timer? _snoozeTimer;
   late AnimationController _pulseController;
   int _currentSnoozeDuration = AppConstants.defaultSnoozeDurationMinutes;
+  int _activeSnoozeDuration = 0;
 
   @override
   void initState() {
@@ -48,7 +50,7 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
     final prefs = await SharedPreferences.getInstance();
     final homeJson = prefs.getString('home_location');
     if (homeJson == null) {
-      setState(() => _canDismiss = true);
+      if (mounted) setState(() => _canDismiss = true);
       return;
     }
 
@@ -57,6 +59,7 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
         AppConstants.defaultLocationTimeoutMinutes;
 
     _locationTimeoutTimer = Timer(Duration(minutes: timeoutMinutes), () {
+      if (!mounted) return;
       setState(() {
         _locationUnavailable = true;
         _canDismiss = true;
@@ -67,12 +70,14 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
       home: home,
       onExitConfirmed: () {
         _locationTimeoutTimer?.cancel();
+        if (!mounted) return;
         setState(() {
           _isOutsideHome = true;
           _canDismiss = true;
         });
       },
       onReturned: () {
+        if (!mounted) return;
         setState(() {
           _isOutsideHome = false;
           _canDismiss = false;
@@ -82,15 +87,21 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
   }
 
   void _snooze() {
-    final alarmId = widget.alarm.id.hashCode.abs() % 2147483647;
+    final alarmId = AlarmTriggerService.alarmIdFromString(widget.alarm.id);
     Alarm.stop(alarmId);
+
+    final currentDuration = _currentSnoozeDuration;
+
+    if (widget.alarm.snoozeMode == SnoozeMode.progressive) {
+      _currentSnoozeDuration = (_currentSnoozeDuration * 0.7).round().clamp(2, 60);
+    }
 
     setState(() {
       _isSnoozed = true;
+      _activeSnoozeDuration = currentDuration;
     });
 
-    _snoozeTimer = Timer(Duration(minutes: _currentSnoozeDuration), () {
-      // Re-ring after snooze
+    _snoozeTimer = Timer(Duration(minutes: currentDuration), () {
       Alarm.set(
         alarmSettings: AlarmSettings(
           id: alarmId,
@@ -107,19 +118,15 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
           ),
         ),
       );
-      setState(() => _isSnoozed = false);
+      if (mounted) setState(() => _isSnoozed = false);
     });
-
-    if (widget.alarm.snoozeMode == SnoozeMode.progressive) {
-      _currentSnoozeDuration = (_currentSnoozeDuration * 0.7).round().clamp(2, 60);
-    }
   }
 
   void _dismiss() {
     _locationService.stopMonitoring();
     _locationTimeoutTimer?.cancel();
     _snoozeTimer?.cancel();
-    Alarm.stop(widget.alarm.id.hashCode.abs() % 2147483647);
+    Alarm.stop(AlarmTriggerService.alarmIdFromString(widget.alarm.id));
     Navigator.of(context).pop(true);
   }
 
@@ -345,7 +352,7 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Alarm will ring again in $_currentSnoozeDuration minutes',
+                'Alarm will ring again in $_activeSnoozeDuration minutes',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.white38,
                     ),

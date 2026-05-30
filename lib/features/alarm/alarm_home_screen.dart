@@ -26,7 +26,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
 
   Future<void> _loadAlarms() async {
     final alarms = await _alarmService.getScheduledAlarms();
-    setState(() => _alarms = alarms);
+    if (mounted) setState(() => _alarms = alarms);
   }
 
   @override

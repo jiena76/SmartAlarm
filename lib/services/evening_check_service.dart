@@ -1,6 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/timezone.dart' as tz;
 import '../models/alarm_model.dart';
 import 'alarm_scheduler.dart';
 import 'alarm_service.dart';
@@ -84,26 +83,15 @@ class EveningCheckService {
   }
 
   Future<void> scheduleEveningCheck() async {
+    // Run immediately if it's evening (after 8pm) and hasn't run today
     final now = DateTime.now();
-    var eveningTime = DateTime(now.year, now.month, now.day, 21, 0);
-    if (eveningTime.isBefore(now)) {
-      eveningTime = eveningTime.add(const Duration(days: 1));
-    }
+    final prefs = await SharedPreferences.getInstance();
+    final lastRunDate = prefs.getString('last_evening_check');
+    final todayStr = '${now.year}-${now.month}-${now.day}';
 
-    await _notifications.zonedSchedule(
-      id: 8888,
-      title: 'SmartAlarm',
-      body: 'Checking tomorrow\'s schedule...',
-      scheduledDate: tz.TZDateTime.from(eveningTime, tz.local),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'evening_check',
-          'Evening Check',
-          channelDescription: 'Triggers evening alarm check',
-          importance: Importance.low,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
+    if (now.hour >= 20 && lastRunDate != todayStr) {
+      await prefs.setString('last_evening_check', todayStr);
+      await runEveningCheck();
+    }
   }
 }

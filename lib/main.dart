@@ -115,9 +115,16 @@ class _AppEntryState extends State<AppEntry> {
         }
       }
 
+      // Clear handled IDs when no alarms are ringing so re-scheduled
+      // alarms (e.g. after snooze) can fire again with the same ID
       if (alarmSet.alarms.isEmpty) {
         _handledAlarmIds.clear();
       }
+    });
+
+    // Also clear when an alarm is stopped (dismissed/snoozed)
+    Alarm.scheduled.listen((_) {
+      _handledAlarmIds.clear();
     });
   }
 

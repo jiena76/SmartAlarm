@@ -14,7 +14,7 @@ class AlarmTriggerService {
 
   Future<void> setAlarm(AlarmModel alarm) async {
     final alarmSettings = AlarmSettings(
-      id: alarm.id.hashCode.abs() % 2147483647,
+      id: alarmIdFromString(alarm.id),
       dateTime: alarm.triggerTime,
       assetAudioPath: 'assets/alarm_sound.mp3',
       vibrate: true,
@@ -38,8 +38,14 @@ class AlarmTriggerService {
   }
 
   Future<void> cancelAlarm(AlarmModel alarm) async {
-    await Alarm.stop(alarm.id.hashCode.abs() % 2147483647);
+    await Alarm.stop(alarmIdFromString(alarm.id));
     await _removeAlarmMapping(alarm.id);
+  }
+
+  static int alarmIdFromString(String id) {
+    // Use last 9 digits of the string's hashCode to avoid collisions
+    // while staying within 32-bit int range
+    return id.hashCode.abs() % 1000000000;
   }
 
   Future<void> cancelAll() async {
@@ -54,7 +60,7 @@ class AlarmTriggerService {
     for (final json in mappings) {
       final map = jsonDecode(json) as Map<String, dynamic>;
       final model = _alarmFromJson(map);
-      if (model.id.hashCode.abs() % 2147483647 == alarmId) {
+      if (alarmIdFromString(model.id) == alarmId) {
         return model;
       }
     }
