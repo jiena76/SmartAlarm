@@ -183,6 +183,16 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
           icon: const Icon(Icons.add_alarm),
           label: const Text('Set Manual Alarm'),
         ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => _testAlarmNow(context),
+          icon: const Icon(Icons.play_arrow),
+          label: const Text('Test Alarm Now'),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.deepOrange),
+            foregroundColor: Colors.deepOrange,
+          ),
+        ),
       ],
     );
   }
@@ -220,6 +230,20 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AlarmFiringScreen(alarm: alarm)),
+    );
+  }
+
+  void _testAlarmNow(BuildContext context) {
+    final testAlarm = AlarmModel(
+      id: 'test_${DateTime.now().millisecondsSinceEpoch}',
+      triggerTime: DateTime.now(),
+      type: AlarmType.locationGated,
+      eventTitle: 'Test Alarm',
+      eventLocation: 'Leave home to dismiss',
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AlarmFiringScreen(alarm: testAlarm)),
     );
   }
 
