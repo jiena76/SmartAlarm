@@ -13,10 +13,13 @@ class AlarmTriggerService {
   }
 
   Future<void> setAlarm(AlarmModel alarm) async {
+    final prefs = await SharedPreferences.getInstance();
+    final soundFile = prefs.getString('alarm_sound') ?? 'alarm_sound.mp3';
+
     final alarmSettings = AlarmSettings(
       id: alarmIdFromString(alarm.id),
       dateTime: alarm.triggerTime,
-      assetAudioPath: 'assets/alarm_sound.mp3',
+      assetAudioPath: 'assets/$soundFile',
       vibrate: true,
       volumeSettings: alarm.volumeMode == VolumeMode.escalating
           ? VolumeSettings.fade(

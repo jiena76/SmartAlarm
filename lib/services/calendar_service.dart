@@ -1,4 +1,8 @@
 import 'package:device_calendar/device_calendar.dart';
+import 'package:geocoding/geocoding.dart' as geo;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/home_location.dart';
 import 'location_dictionary_service.dart';
 
 class CalendarEvent {
@@ -88,8 +92,35 @@ class CalendarService {
       return _TravelResult(requiresTravel: learned, unknown: false);
     }
 
-    // Has a location but we don't know if it requires travel
+    // Try to geocode and compare distance to home
+    final home = await _getHomeLocation();
+    if (home != null) {
+      try {
+        final locations = await geo.locationFromAddress(location)
+            .timeout(const Duration(seconds: 5));
+        if (locations.isNotEmpty) {
+          final eventLat = locations.first.latitude;
+          final eventLng = locations.first.longitude;
+          final isNearHome = !home.isOutside(eventLat, eventLng);
+          if (isNearHome) {
+            return _TravelResult(requiresTravel: false, unknown: false);
+          }
+          return _TravelResult(requiresTravel: true, unknown: false);
+        }
+      } catch (_) {
+        // Geocoding failed — treat as unknown
+      }
+    }
+
+    // Can't determine — mark as unknown and ask user
     return _TravelResult(requiresTravel: true, unknown: true);
+  }
+
+  Future<HomeLocation?> _getHomeLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString('home_location');
+    if (json == null) return null;
+    return HomeLocation.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 }
 

@@ -7,6 +7,7 @@ import '../../models/alarm_model.dart';
 import '../../models/home_location.dart';
 import '../../services/location_service.dart';
 import '../../services/alarm_trigger_service.dart';
+import '../../services/cheat_log_service.dart';
 import '../../core/constants.dart';
 
 class AlarmFiringScreen extends StatefulWidget {
@@ -123,6 +124,12 @@ class _AlarmFiringScreenState extends State<AlarmFiringScreen>
   }
 
   void _dismiss() {
+    if (_locationUnavailable) {
+      CheatLogService().logTimeoutDismiss(
+        widget.alarm.id,
+        widget.alarm.eventTitle,
+      );
+    }
     _locationService.stopMonitoring();
     _locationTimeoutTimer?.cancel();
     _snoozeTimer?.cancel();

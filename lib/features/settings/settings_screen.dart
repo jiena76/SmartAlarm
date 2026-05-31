@@ -25,7 +25,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoMode = true;
   bool _fallbackAlarmEnabled = false;
   TimeOfDay _fallbackAlarmTime = const TimeOfDay(hour: 7, minute: 0);
+  String _alarmSound = 'alarm_sound.mp3';
   bool _loading = true;
+
+  static const _soundOptions = {
+    'alarm_sound.mp3': 'Classic Beep',
+    'alarm_gentle.mp3': 'Gentle',
+    'alarm_urgent.mp3': 'Urgent',
+  };
+
+  String get _alarmSoundLabel => _soundOptions[_alarmSound] ?? 'Classic Beep';
 
   @override
   void initState() {
@@ -49,6 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? VolumeMode.values[volumeIndex]
           : VolumeMode.fixed;
       _autoMode = prefs.getBool('auto_mode') ?? true;
+      _alarmSound = prefs.getString('alarm_sound') ?? 'alarm_sound.mp3';
       _fallbackAlarmEnabled = prefs.getBool('fallback_alarm_enabled') ?? false;
       final fallbackHour = prefs.getInt('fallback_alarm_hour') ?? 7;
       final fallbackMinute = prefs.getInt('fallback_alarm_minute') ?? 0;
@@ -197,6 +207,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _saveSetting('volume_mode', index);
             },
           ),
+          ListTile(
+            title: const Text('Alarm sound'),
+            subtitle: Text(_alarmSoundLabel),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _showSoundPicker,
+          ),
           const Divider(),
           _buildSectionHeader('Location'),
           ListTile(
@@ -244,6 +260,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Appearance'),
           _buildThemeTile(context),
         ],
+      ),
+    );
+  }
+
+  void _showSoundPicker() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Choose alarm sound'),
+        children: _soundOptions.entries.map((entry) {
+          return ListTile(
+            title: Text(entry.value),
+            leading: Icon(
+              _alarmSound == entry.key
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: _alarmSound == entry.key ? Colors.deepOrange : null,
+            ),
+            onTap: () async {
+              setState(() => _alarmSound = entry.key);
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('alarm_sound', entry.key);
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+          );
+        }).toList(),
       ),
     );
   }

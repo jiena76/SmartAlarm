@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/alarm_model.dart';
 import '../../services/alarm_service.dart';
 import '../../services/alarm_trigger_service.dart';
+import '../../services/cheat_log_service.dart';
 import '../calendar/calendar_sync_screen.dart';
 import '../settings/settings_screen.dart';
 import 'alarm_firing_screen.dart';
@@ -16,17 +17,25 @@ class AlarmHomeScreen extends StatefulWidget {
 class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
   final AlarmService _alarmService = AlarmService();
   final AlarmTriggerService _triggerService = AlarmTriggerService();
+  final CheatLogService _cheatLog = CheatLogService();
   List<AlarmModel> _alarms = [];
+  int _weeklyCheatCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadAlarms();
+    _loadCheatStats();
   }
 
   Future<void> _loadAlarms() async {
     final alarms = await _alarmService.getScheduledAlarms();
     if (mounted) setState(() => _alarms = alarms);
+  }
+
+  Future<void> _loadCheatStats() async {
+    final count = await _cheatLog.getThisWeekCount();
+    if (mounted) setState(() => _weeklyCheatCount = count);
   }
 
   @override
@@ -51,6 +60,28 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_weeklyCheatCount > 0) ...[
+              Card(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber,
+                          color: Theme.of(context).colorScheme.error),
+                      const SizedBox(width: 8),
+                      Text(
+                        'You bypassed the alarm $_weeklyCheatCount time${_weeklyCheatCount == 1 ? '' : 's'} this week',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildNextAlarmCard(context),
             const SizedBox(height: 24),
             _buildQuickActions(context),
